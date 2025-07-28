@@ -2,7 +2,7 @@ package jejakapi
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/radenalam/jejakapi/internal"
+	internal "github.com/radenalam/jejakapi/internal"
 	"gorm.io/gorm"
 )
 

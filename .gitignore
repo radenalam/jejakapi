@@ -4,3 +4,6 @@ app
 tmp
 
 .DS_Store
+
+example
+jejakapi.go
