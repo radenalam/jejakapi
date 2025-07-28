@@ -1,0 +1,6 @@
+.env
+go.sum
+app
+tmp
+
+.DS_Store
