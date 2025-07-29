@@ -125,12 +125,8 @@
       }
 
       function toggleLogDetails(id) {
-        const details = document.getElementById("details-" + id);
-        if (details.classList.contains("hidden")) {
-          details.classList.remove("hidden");
-        } else {
-          details.classList.add("hidden");
-        }
+        // window.open("/jejakapi/logs/" + id, "_blank"); // Open detail in new window/tab
+        window.location.href = "/jejakapi/logs/" + id; // redirect to detail page
       }
 
       async function loadLogs(page = 1) {
@@ -148,10 +144,10 @@
               const methodClass = getMethodClass(log.method);
 
               html += `
-                <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
-                  <div class="p-4 cursor-pointer hover:bg-slate-700 transition-colors duration-200" onclick="toggleLogDetails('${
-                    log.id
-                  }')">
+                <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden hover:bg-slate-700 transition-colors duration-200 cursor-pointer" onclick="toggleLogDetails('${
+                  log.id
+                }')">
+                  <div class="p-4">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center space-x-3">
                         <span class="${methodClass} text-white px-2 py-1 rounded text-xs font-bold">${
@@ -171,58 +167,9 @@
                         <span class="text-gray-500">${formatTimestamp(
                           log.created_at
                         )}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div id="details-${
-                    log.id
-                  }" class="hidden border-t border-dark-border bg-slate-800">
-                    <div class="p-4 space-y-4">
-                      <div>
-                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Request Headers</h4>
-                        <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
-                          JSON.stringify(log.headers)
-                        )}</pre>
-                      </div>
-                      ${
-                        log.body
-                          ? `
-                      <div>
-                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Request Body</h4>
-                        <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-48 overflow-y-auto">${formatJSON(
-                          log.body
-                        )}</pre>
-                      </div>
-                      `
-                          : ""
-                      }
-                      <div>
-                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Response Headers</h4>
-                        <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
-                          JSON.stringify(log.response_headers)
-                        )}</pre>
-                      </div>
-                      ${
-                        log.response_body
-                          ? `
-                      <div>
-                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Response Body</h4>
-                        <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-48 overflow-y-auto">${formatJSON(
-                          log.response_body
-                        )}</pre>
-                      </div>
-                      `
-                          : ""
-                      }
-                      <div>
-                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Client Info</h4>
-                        <div class="bg-dark-bg p-3 rounded text-xs text-gray-300 border border-dark-border">
-                          <div><strong>IP:</strong> ${log.ip}</div>
-                          <div><strong>User Agent:</strong> ${
-                            log.user_agent
-                          }</div>
-                        </div>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-1M7 7l10 10M17 7v4"></path>
+                        </svg>
                       </div>
                     </div>
                   </div>

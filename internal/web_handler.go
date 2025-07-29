@@ -10,6 +10,9 @@ import (
 //go:embed views/dashboard.html
 var dashboardHTML []byte
 
+//go:embed views/detail.html
+var detailHTML []byte
+
 // WebHandler menangani routing untuk web interface jejakapi
 type WebHandler struct {
 	collector *Collector
@@ -107,7 +110,8 @@ func (h *WebHandler) toggleEnabled(c *fiber.Ctx) error {
 	})
 }
 
-// logDetail menampilkan detail log (untuk implementasi detail view nantinya)
+// logDetail menampilkan detail log
 func (h *WebHandler) logDetail(c *fiber.Ctx) error {
-	return c.Redirect("/jejakapi/")
+	c.Set("Content-Type", "text/html")
+	return c.Send(detailHTML)
 }

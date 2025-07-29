@@ -121,8 +121,8 @@ func (c *Collector) GetLogs(page, limit int) ([]RequestLog, int64, error) {
 		return nil, 0, err
 	}
 
-	// Get logs with pagination
-	if err := c.db.Order("created_at DESC").Offset(offset).Limit(limit).Find(&logs).Error; err != nil {
+	// Get logs with pagination - hanya mengambil field yang diperlukan untuk list
+	if err := c.db.Select("id, method, url, status_code, duration, created_at").Order("created_at DESC").Offset(offset).Limit(limit).Find(&logs).Error; err != nil {
 		return nil, 0, err
 	}
 
