@@ -201,6 +201,7 @@
                 </div>
               </div>
 
+
               <!-- Response Section -->
               <div class="bg-dark-surface border border-dark-border rounded-lg">
                 <div class="border-b border-dark-border p-4">
@@ -227,6 +228,71 @@
                   }
                 </div>
               </div>
+
+
+              <!-- SQL Queries Section -->
+              ${
+                log.sql_queries &&
+                log.sql_queries.queries &&
+                log.sql_queries.queries.length > 0
+                  ? `
+              <div class="bg-dark-surface border border-dark-border rounded-lg">
+                <div class="border-b border-dark-border p-4">
+                  <h2 class="text-lg font-semibold text-white">Database Queries (${
+                    log.sql_queries.queries.length
+                  })</h2>
+                </div>
+                <div class="p-4 space-y-4">
+                  ${log.sql_queries.queries
+                    .map(
+                      (query, index) => `
+                    <div class="border border-dark-border rounded-lg overflow-hidden">
+                      <div class="bg-slate-800 px-3 py-2 border-b border-dark-border">
+                        <div class="flex items-center justify-between text-xs">
+                          <span class="text-gray-300 font-medium">Query #${
+                            index + 1
+                          }</span>
+                          <div class="flex items-center space-x-3">
+                            <span class="text-blue-400">Duration: ${
+                              query.duration
+                                ? (query.duration / 1000000).toFixed(2) + "ms"
+                                : "N/A"
+                            }</span>
+                            <span class="text-green-400">Rows: ${
+                              query.rows_affected || 0
+                            }</span>
+                            ${
+                              query.error
+                                ? '<span class="text-red-400">Error</span>'
+                                : '<span class="text-green-400">Success</span>'
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      <div class="p-3">
+                        <pre class="text-xs text-gray-300 whitespace-pre-wrap break-words">${
+                          query.sql
+                        }</pre>
+                        ${
+                          query.error
+                            ? `
+                        <div class="mt-2 pt-2 border-t border-red-600">
+                          <div class="text-xs text-red-400 font-medium mb-1">Error:</div>
+                          <pre class="text-xs text-red-300 whitespace-pre-wrap">${query.error}</pre>
+                        </div>
+                        `
+                            : ""
+                        }
+                      </div>
+                    </div>
+                  `
+                    )
+                    .join("")}
+                </div>
+              </div>
+              `
+                  : ""
+              }
 
               <!-- Client Info Section -->
               <div class="bg-dark-surface border border-dark-border rounded-lg">

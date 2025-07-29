@@ -1,12 +1,16 @@
 package internal
 
 import (
+	"context"
+	"log"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // Collector bertanggung jawab untuk mengumpulkan dan menyimpan log request
@@ -15,16 +19,42 @@ type Collector struct {
 	enabled bool
 }
 
-// NewCollector membuat instance baru dari Collector
+// NewCollector membuat instance baru dari Collector dengan SQL query monitoring
 func NewCollector(db *gorm.DB) *Collector {
 	collector := &Collector{
 		db:      db,
 		enabled: true,
 	}
 
+	// Setup SQL logger otomatis
+	collector.setupDefaultSQLLogger()
+
 	collector.AutoMigrate()
 
 	return collector
+}
+
+// setupDefaultSQLLogger mengatur default SQL logger untuk monitoring
+func (c *Collector) setupDefaultSQLLogger() {
+	// Buat default logger untuk SQL monitoring
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logger.Info, // Log level
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			Colorful:                  false,       // Disable color
+		},
+	)
+
+	// Setup custom SQL logger
+	c.SetupSQLLogger(newLogger)
+}
+
+// SetupSQLLogger mengatur custom SQL logger untuk GORM
+func (c *Collector) SetupSQLLogger(baseLogger logger.Interface) {
+	customLogger := NewCustomSQLLogger(baseLogger)
+	c.db.Logger = customLogger
 }
 
 // AutoMigrate membuat table jika belum ada
@@ -45,6 +75,12 @@ func (c *Collector) Middleware() fiber.Handler {
 		}
 
 		start := time.Now()
+
+		// Siapkan slice untuk menampung SQL queries
+		var sqlQueries []SQLQuery
+
+		// Tambahkan SQL queries ke context
+		ctx.SetUserContext(context.WithValue(ctx.UserContext(), SQLQueriesKey, &sqlQueries))
 
 		// Capture request body
 		var requestBody *string
@@ -82,6 +118,13 @@ func (c *Collector) Middleware() fiber.Handler {
 		})
 
 		// Create log entry
+		var sqlQueriesJSON JSON
+		if len(sqlQueries) > 0 {
+			sqlQueriesMap := make(map[string]interface{})
+			sqlQueriesMap["queries"] = sqlQueries
+			sqlQueriesJSON = JSON(sqlQueriesMap)
+		}
+
 		logEntry := RequestLog{
 			ID:              uuid.New(),
 			Method:          ctx.Method(),
@@ -91,6 +134,7 @@ func (c *Collector) Middleware() fiber.Handler {
 			StatusCode:      ctx.Response().StatusCode(),
 			ResponseHeaders: JSON(responseHeaders),
 			ResponseBody:    responseBody,
+			SQLQueries:      sqlQueriesJSON,
 			Duration:        duration,
 			IP:              ctx.IP(),
 			UserAgent:       ctx.Get("User-Agent"),
