@@ -18,10 +18,26 @@
                 text: "#e2e8f0",
               },
             },
+            animation: {
+              spin: "spin 1s linear infinite",
+            },
           },
         },
       };
     </script>
+    <style>
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+    </style>
   </head>
   <body class="bg-dark-bg text-dark-text min-h-screen">
     <!-- Header dengan menu bar -->
@@ -34,24 +50,70 @@
           </div>
 
           <!-- Action Buttons -->
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
+            <!-- Toggle Monitoring Button -->
             <button
+              id="toggle-btn"
               onclick="toggleEnabled()"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+              class="bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              title="Toggle Monitoring"
             >
-              Toggle Monitoring
+              <svg
+                id="toggle-icon"
+                class="w-5 h-5 animate-spin"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                ></path>
+              </svg>
             </button>
+
+            <!-- Refresh Button -->
             <button
               onclick="refreshLogs()"
-              class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+              class="bg-gray-600 hover:bg-gray-700 text-white p-2 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              title="Refresh Logs"
             >
-              Refresh
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                ></path>
+              </svg>
             </button>
+
+            <!-- Clear All Button -->
             <button
               onclick="clearLogs()"
-              class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+              class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              title="Clear All Logs"
             >
-              Clear All
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                ></path>
+              </svg>
             </button>
           </div>
         </div>
@@ -77,6 +139,8 @@
     <script>
       let currentPage = 1;
       const logsPerPage = 20;
+      let isMonitoringEnabled = true;
+      let autoRefreshInterval = null;
 
       function formatTimestamp(timestamp) {
         return new Date(timestamp).toLocaleString();
@@ -121,6 +185,56 @@
           return JSON.stringify(JSON.parse(str), null, 2);
         } catch (e) {
           return str;
+        }
+      }
+
+      function updateToggleIcon() {
+        const toggleBtn = document.getElementById("toggle-btn");
+        const toggleIcon = document.getElementById("toggle-icon");
+
+        if (isMonitoringEnabled) {
+          // Active state - rotating refresh icon
+          toggleBtn.className =
+            "bg-green-600 hover:bg-green-700 text-white p-2 rounded-lg transition-colors duration-200 flex items-center justify-center";
+          toggleIcon.className = "w-5 h-5 animate-spin";
+          // Refresh/reload icon
+          toggleIcon
+            .querySelector("path")
+            .setAttribute(
+              "d",
+              "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            );
+        } else {
+          // Inactive state - static stop icon
+          toggleBtn.className =
+            "bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors duration-200 flex items-center justify-center";
+          toggleIcon.className = "w-5 h-5";
+          // Stop/pause icon
+          toggleIcon
+            .querySelector("path")
+            .setAttribute(
+              "d",
+              "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
+            );
+        }
+      }
+
+      function startAutoRefresh() {
+        if (autoRefreshInterval) {
+          clearInterval(autoRefreshInterval);
+        }
+
+        autoRefreshInterval = setInterval(function () {
+          if (currentPage === 1 && isMonitoringEnabled) {
+            loadLogs(1);
+          }
+        }, 10000);
+      }
+
+      function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+          clearInterval(autoRefreshInterval);
+          autoRefreshInterval = null;
         }
       }
 
@@ -227,11 +341,28 @@
       async function toggleEnabled() {
         try {
           await fetch("/jejakapi/api/toggle", { method: "POST" });
-          // Show a brief notification instead of alert
+
+          // Toggle monitoring state
+          isMonitoringEnabled = !isMonitoringEnabled;
+
+          // Update icon appearance
+          updateToggleIcon();
+
+          // Control auto refresh
+          if (isMonitoringEnabled) {
+            startAutoRefresh();
+          } else {
+            stopAutoRefresh();
+          }
+
+          // Show notification
           const notification = document.createElement("div");
-          notification.className =
-            "fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50";
-          notification.textContent = "Monitoring toggled";
+          notification.className = `fixed top-4 right-4 ${
+            isMonitoringEnabled ? "bg-green-600" : "bg-red-600"
+          } text-white px-4 py-2 rounded-lg shadow-lg z-50`;
+          notification.textContent = `Monitoring ${
+            isMonitoringEnabled ? "enabled" : "disabled"
+          }`;
           document.body.appendChild(notification);
           setTimeout(() => {
             document.body.removeChild(notification);
@@ -248,14 +379,16 @@
 
       // Load logs on page load
       document.addEventListener("DOMContentLoaded", function () {
+        // Initialize toggle icon
+        updateToggleIcon();
+
+        // Load initial logs
         loadLogs();
 
-        // Auto refresh every 10 seconds
-        setInterval(function () {
-          if (currentPage === 1) {
-            loadLogs(1);
-          }
-        }, 10000);
+        // Start auto refresh if monitoring is enabled
+        if (isMonitoringEnabled) {
+          startAutoRefresh();
+        }
       });
     </script>
   </body>
