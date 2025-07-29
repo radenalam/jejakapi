@@ -1,180 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JejakAPI - Request Monitoring</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background-color: #f5f5f5;
-      }
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-      }
-      .header {
-        background: #2c3e50;
-        color: white;
-        padding: 20px;
-        text-align: center;
-      }
-      .controls {
-        padding: 20px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
-      .btn {
-        background: #3498db;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      .btn:hover {
-        background: #2980b9;
-      }
-      .btn.danger {
-        background: #e74c3c;
-      }
-      .btn.danger:hover {
-        background: #c0392b;
-      }
-      .logs-container {
-        padding: 20px;
-      }
-      .log-entry {
-        border: 1px solid #ddd;
-        margin-bottom: 10px;
-        border-radius: 4px;
-        overflow: hidden;
-      }
-      .log-header {
-        background: #f8f9fa;
-        padding: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-      }
-      .log-header:hover {
-        background: #e9ecef;
-      }
-      .method {
-        font-weight: bold;
-        padding: 2px 8px;
-        border-radius: 3px;
-        color: white;
-        font-size: 12px;
-      }
-      .method.GET {
-        background: #28a745;
-      }
-      .method.POST {
-        background: #007bff;
-      }
-      .method.PUT {
-        background: #ffc107;
-        color: #000;
-      }
-      .method.DELETE {
-        background: #dc3545;
-      }
-      .method.PATCH {
-        background: #6f42c1;
-      }
-      .status {
-        font-weight: bold;
-        padding: 2px 8px;
-        border-radius: 3px;
-        color: white;
-        font-size: 12px;
-      }
-      .status.success {
-        background: #28a745;
-      }
-      .status.error {
-        background: #dc3545;
-      }
-      .status.warning {
-        background: #ffc107;
-        color: #000;
-      }
-      .log-details {
-        padding: 15px;
-        background: #f8f9fa;
-        display: none;
-      }
-      .detail-section {
-        margin-bottom: 15px;
-      }
-      .detail-title {
-        font-weight: bold;
-        margin-bottom: 5px;
-        color: #495057;
-      }
-      .detail-content {
-        background: white;
-        padding: 10px;
-        border-radius: 3px;
-        border: 1px solid #dee2e6;
-        font-family: "Courier New", monospace;
-        font-size: 12px;
-        max-height: 200px;
-        overflow-y: auto;
-      }
-      .pagination {
-        text-align: center;
-        padding: 20px;
-      }
-      .pagination a {
-        display: inline-block;
-        padding: 8px 12px;
-        margin: 0 5px;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        text-decoration: none;
-        color: #495057;
-      }
-      .pagination a:hover {
-        background: #e9ecef;
-      }
-      .pagination a.active {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
-      }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              dark: {
+                bg: "#0f172a",
+                surface: "#1e293b",
+                border: "#334155",
+                text: "#e2e8f0",
+              },
+            },
+          },
+        },
+      };
+    </script>
   </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <h1>🔍 JejakAPI</h1>
-        <p>Request & Response Monitoring Tool</p>
-      </div>
+  <body class="bg-dark-bg text-dark-text min-h-screen">
+    <!-- Header dengan menu bar -->
+    <header class="bg-dark-surface border-b border-dark-border">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo/Title -->
+          <div class="flex items-center">
+            <h1 class="text-xl font-bold text-white">Jejak API</h1>
+          </div>
 
-      <div class="controls">
-        <button class="btn" onclick="toggleEnabled()">Toggle Monitoring</button>
-        <button class="btn danger" onclick="clearLogs()">Clear All Logs</button>
-        <button class="btn" onclick="refreshLogs()">Refresh</button>
-      </div>
-
-      <div class="logs-container" id="logs-container">
-        <div style="text-align: center; padding: 40px">
-          <p>Loading logs...</p>
+          <!-- Action Buttons -->
+          <div class="flex items-center space-x-4">
+            <button
+              onclick="toggleEnabled()"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+            >
+              Toggle Monitoring
+            </button>
+            <button
+              onclick="refreshLogs()"
+              class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+            >
+              Refresh
+            </button>
+            <button
+              onclick="clearLogs()"
+              class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+            >
+              Clear All
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div id="logs-container" class="space-y-4">
+        <div class="text-center py-16">
+          <div
+            class="animate-spin inline-block w-8 h-8 border-[3px] border-current border-t-transparent text-blue-600 rounded-full"
+            role="status"
+            aria-label="loading"
+          >
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-4 text-gray-400">Loading logs...</p>
+        </div>
+      </div>
+    </main>
 
     <script>
       let currentPage = 1;
@@ -195,10 +93,27 @@
       }
 
       function getStatusClass(status) {
-        if (status >= 200 && status < 300) return "success";
-        if (status >= 400) return "error";
-        if (status >= 300) return "warning";
-        return "";
+        if (status >= 200 && status < 300) return "bg-green-600";
+        if (status >= 400) return "bg-red-600";
+        if (status >= 300) return "bg-yellow-600";
+        return "bg-gray-600";
+      }
+
+      function getMethodClass(method) {
+        switch (method) {
+          case "GET":
+            return "bg-green-600";
+          case "POST":
+            return "bg-blue-600";
+          case "PUT":
+            return "bg-yellow-600";
+          case "DELETE":
+            return "bg-red-600";
+          case "PATCH":
+            return "bg-purple-600";
+          default:
+            return "bg-gray-600";
+        }
       }
 
       function formatJSON(str) {
@@ -211,10 +126,10 @@
 
       function toggleLogDetails(id) {
         const details = document.getElementById("details-" + id);
-        if (details.style.display === "none" || !details.style.display) {
-          details.style.display = "block";
+        if (details.classList.contains("hidden")) {
+          details.classList.remove("hidden");
         } else {
-          details.style.display = "none";
+          details.classList.add("hidden");
         }
       }
 
@@ -230,111 +145,123 @@
           if (data.logs && data.logs.length > 0) {
             data.logs.forEach((log) => {
               const statusClass = getStatusClass(log.status_code);
-              html += '<div class="log-entry">';
-              html +=
-                '<div class="log-header" onclick="toggleLogDetails(\'' +
-                log.id +
-                "')\">";
-              html += "<div>";
-              html +=
-                '<span class="method ' +
-                log.method +
-                '">' +
-                log.method +
-                "</span>";
-              html += '<span style="margin-left: 10px;">' + log.url + "</span>";
-              html += "</div>";
-              html += "<div>";
-              html +=
-                '<span class="status ' +
-                statusClass +
-                '">' +
-                log.status_code +
-                "</span>";
-              html +=
-                '<span style="margin-left: 10px;">' +
-                formatDuration(log.duration) +
-                "</span>";
-              html +=
-                '<span style="margin-left: 10px; color: #6c757d;">' +
-                formatTimestamp(log.created_at) +
-                "</span>";
-              html += "</div>";
-              html += "</div>";
-              html += '<div class="log-details" id="details-' + log.id + '">';
-              html += '<div class="detail-section">';
-              html += '<div class="detail-title">Request Headers</div>';
-              html +=
-                '<div class="detail-content">' +
-                formatJSON(JSON.stringify(log.headers)) +
-                "</div>";
-              html += "</div>";
-              if (log.body) {
-                html += '<div class="detail-section">';
-                html += '<div class="detail-title">Request Body</div>';
-                html +=
-                  '<div class="detail-content">' +
-                  formatJSON(log.body) +
-                  "</div>";
-                html += "</div>";
-              }
-              html += '<div class="detail-section">';
-              html += '<div class="detail-title">Response Headers</div>';
-              html +=
-                '<div class="detail-content">' +
-                formatJSON(JSON.stringify(log.response_headers)) +
-                "</div>";
-              html += "</div>";
-              if (log.response_body) {
-                html += '<div class="detail-section">';
-                html += '<div class="detail-title">Response Body</div>';
-                html +=
-                  '<div class="detail-content">' +
-                  formatJSON(log.response_body) +
-                  "</div>";
-                html += "</div>";
-              }
-              html += '<div class="detail-section">';
-              html += '<div class="detail-title">Client Info</div>';
-              html +=
-                '<div class="detail-content">IP: ' +
-                log.ip +
-                "<br>User Agent: " +
-                log.user_agent +
-                "</div>";
-              html += "</div>";
-              html += "</div>";
-              html += "</div>";
+              const methodClass = getMethodClass(log.method);
+
+              html += `
+                <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
+                  <div class="p-4 cursor-pointer hover:bg-slate-700 transition-colors duration-200" onclick="toggleLogDetails('${
+                    log.id
+                  }')">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center space-x-3">
+                        <span class="${methodClass} text-white px-2 py-1 rounded text-xs font-bold">${
+                log.method
+              }</span>
+                        <span class="text-gray-300 font-mono text-sm">${
+                          log.url
+                        }</span>
+                      </div>
+                      <div class="flex items-center space-x-3 text-sm">
+                        <span class="${statusClass} text-white px-2 py-1 rounded text-xs font-bold">${
+                log.status_code
+              }</span>
+                        <span class="text-gray-400">${formatDuration(
+                          log.duration
+                        )}</span>
+                        <span class="text-gray-500">${formatTimestamp(
+                          log.created_at
+                        )}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div id="details-${
+                    log.id
+                  }" class="hidden border-t border-dark-border bg-slate-800">
+                    <div class="p-4 space-y-4">
+                      <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Request Headers</h4>
+                        <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
+                          JSON.stringify(log.headers)
+                        )}</pre>
+                      </div>
+                      ${
+                        log.body
+                          ? `
+                      <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Request Body</h4>
+                        <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-48 overflow-y-auto">${formatJSON(
+                          log.body
+                        )}</pre>
+                      </div>
+                      `
+                          : ""
+                      }
+                      <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Response Headers</h4>
+                        <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
+                          JSON.stringify(log.response_headers)
+                        )}</pre>
+                      </div>
+                      ${
+                        log.response_body
+                          ? `
+                      <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Response Body</h4>
+                        <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-48 overflow-y-auto">${formatJSON(
+                          log.response_body
+                        )}</pre>
+                      </div>
+                      `
+                          : ""
+                      }
+                      <div>
+                        <h4 class="text-sm font-semibold text-gray-300 mb-2">Client Info</h4>
+                        <div class="bg-dark-bg p-3 rounded text-xs text-gray-300 border border-dark-border">
+                          <div><strong>IP:</strong> ${log.ip}</div>
+                          <div><strong>User Agent:</strong> ${
+                            log.user_agent
+                          }</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
             });
 
             // Add pagination
             const totalPages = Math.ceil(data.total / logsPerPage);
             if (totalPages > 1) {
-              html += '<div class="pagination">';
+              html += '<div class="flex justify-center mt-8 space-x-2">';
               for (let i = 1; i <= totalPages; i++) {
-                const activeClass = i === page ? "active" : "";
-                html +=
-                  '<a href="#" class="' +
-                  activeClass +
-                  '" onclick="loadLogs(' +
-                  i +
-                  '); return false;">' +
-                  i +
-                  "</a>";
+                const activeClass =
+                  i === page
+                    ? "bg-blue-600 text-white"
+                    : "bg-dark-surface text-gray-300 hover:bg-slate-700";
+                html += `<button onclick="loadLogs(${i})" class="${activeClass} px-3 py-2 rounded border border-dark-border transition-colors duration-200">${i}</button>`;
               }
               html += "</div>";
             }
           } else {
-            html =
-              '<div style="text-align: center; padding: 40px;"><p>No logs found</p></div>';
+            html = `
+              <div class="text-center py-16">
+                <div class="text-gray-400 text-lg">No logs found</div>
+                <p class="text-gray-500 mt-2">Start making requests to see logs here</p>
+              </div>
+            `;
           }
 
           document.getElementById("logs-container").innerHTML = html;
           currentPage = page;
         } catch (error) {
           console.error("Error loading logs:", error);
-          document.getElementById("logs-container").innerHTML =
-            '<div style="text-align: center; padding: 40px;"><p>Error loading logs</p></div>';
+          document.getElementById("logs-container").innerHTML = `
+            <div class="text-center py-16">
+              <div class="text-red-400 text-lg">Error loading logs</div>
+              <p class="text-gray-500 mt-2">${error.message}</p>
+            </div>
+          `;
         }
       }
 
@@ -345,6 +272,7 @@
             loadLogs(1);
           } catch (error) {
             console.error("Error clearing logs:", error);
+            alert("Error clearing logs: " + error.message);
           }
         }
       }
@@ -352,9 +280,18 @@
       async function toggleEnabled() {
         try {
           await fetch("/jejakapi/api/toggle", { method: "POST" });
-          alert("Monitoring toggled");
+          // Show a brief notification instead of alert
+          const notification = document.createElement("div");
+          notification.className =
+            "fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50";
+          notification.textContent = "Monitoring toggled";
+          document.body.appendChild(notification);
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 3000);
         } catch (error) {
           console.error("Error toggling monitoring:", error);
+          alert("Error toggling monitoring: " + error.message);
         }
       }
 
