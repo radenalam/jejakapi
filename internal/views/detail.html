@@ -178,26 +178,43 @@
               <div class="bg-dark-surface border border-dark-border rounded-lg">
                 <div class="border-b border-dark-border p-4">
                   <h2 class="text-lg font-semibold text-white">Request</h2>
+                  <!-- Tab Navigation -->
+                  <div class="flex space-x-1 mt-4">
+                    <button 
+                      onclick="switchRequestTab('body')" 
+                      id="tab-body" 
+                      class="px-3 py-2 text-sm font-medium rounded-lg transition-colors bg-blue-600 text-white"
+                    >
+                      Body
+                    </button>
+                    <button 
+                      onclick="switchRequestTab('headers')" 
+                      id="tab-headers" 
+                      class="px-3 py-2 text-sm font-medium rounded-lg transition-colors bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    >
+                      Headers
+                    </button>
+                  </div>
                 </div>
-                <div class="p-4 space-y-4">
-                  <div>
-                    <h3 class="text-sm font-semibold text-gray-300 mb-2">Headers</h3>
+                <div class="p-4">
+                  <!-- Body Tab Content -->
+                  <div id="request-body-content" class="request-tab-content">
+                    ${
+                      log.body
+                        ? `
+                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-96 overflow-y-auto">${formatJSON(
+                      log.body
+                    )}</pre>
+                    `
+                        : '<div class="text-gray-400 text-sm">No request body</div>'
+                    }
+                  </div>
+                  <!-- Headers Tab Content -->
+                  <div id="request-headers-content" class="request-tab-content hidden">
                     <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
                       JSON.stringify(log.headers || {})
                     )}</pre>
                   </div>
-                  ${
-                    log.body
-                      ? `
-                  <div>
-                    <h3 class="text-sm font-semibold text-gray-300 mb-2">Body</h3>
-                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-96 overflow-y-auto">${formatJSON(
-                      log.body
-                    )}</pre>
-                  </div>
-                  `
-                      : '<div class="text-gray-400 text-sm">No request body</div>'
-                  }
                 </div>
               </div>
 
@@ -206,26 +223,43 @@
               <div class="bg-dark-surface border border-dark-border rounded-lg">
                 <div class="border-b border-dark-border p-4">
                   <h2 class="text-lg font-semibold text-white">Response</h2>
+                  <!-- Tab Navigation -->
+                  <div class="flex space-x-1 mt-4">
+                    <button 
+                      onclick="switchResponseTab('body')" 
+                      id="response-tab-body" 
+                      class="px-3 py-2 text-sm font-medium rounded-lg transition-colors bg-blue-600 text-white"
+                    >
+                      Body
+                    </button>
+                    <button 
+                      onclick="switchResponseTab('headers')" 
+                      id="response-tab-headers" 
+                      class="px-3 py-2 text-sm font-medium rounded-lg transition-colors bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    >
+                      Headers
+                    </button>
+                  </div>
                 </div>
-                <div class="p-4 space-y-4">
-                  <div>
-                    <h3 class="text-sm font-semibold text-gray-300 mb-2">Headers</h3>
+                <div class="p-4">
+                  <!-- Body Tab Content -->
+                  <div id="response-body-content" class="response-tab-content">
+                    ${
+                      log.response_body
+                        ? `
+                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-96 overflow-y-auto">${formatJSON(
+                      log.response_body
+                    )}</pre>
+                    `
+                        : '<div class="text-gray-400 text-sm">No response body</div>'
+                    }
+                  </div>
+                  <!-- Headers Tab Content -->
+                  <div id="response-headers-content" class="response-tab-content hidden">
                     <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
                       JSON.stringify(log.response_headers || {})
                     )}</pre>
                   </div>
-                  ${
-                    log.response_body
-                      ? `
-                  <div>
-                    <h3 class="text-sm font-semibold text-gray-300 mb-2">Body</h3>
-                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-96 overflow-y-auto">${formatJSON(
-                      log.response_body
-                    )}</pre>
-                  </div>
-                  `
-                      : '<div class="text-gray-400 text-sm">No response body</div>'
-                  }
                 </div>
               </div>
 
@@ -330,6 +364,68 @@
             </div>
           `;
         }
+      }
+
+      function switchRequestTab(tabName) {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll(".request-tab-content");
+        tabContents.forEach((content) => content.classList.add("hidden"));
+
+        // Show selected tab content
+        document
+          .getElementById(`request-${tabName}-content`)
+          .classList.remove("hidden");
+
+        // Update tab buttons
+        const tabButtons = document.querySelectorAll('[id^="tab-"]');
+        tabButtons.forEach((button) => {
+          button.classList.remove("bg-blue-600", "text-white");
+          button.classList.add(
+            "bg-gray-700",
+            "text-gray-300",
+            "hover:bg-gray-600"
+          );
+        });
+
+        // Activate selected tab
+        const activeTab = document.getElementById(`tab-${tabName}`);
+        activeTab.classList.remove(
+          "bg-gray-700",
+          "text-gray-300",
+          "hover:bg-gray-600"
+        );
+        activeTab.classList.add("bg-blue-600", "text-white");
+      }
+
+      function switchResponseTab(tabName) {
+        // Hide all response tab contents
+        const tabContents = document.querySelectorAll(".response-tab-content");
+        tabContents.forEach((content) => content.classList.add("hidden"));
+
+        // Show selected tab content
+        document
+          .getElementById(`response-${tabName}-content`)
+          .classList.remove("hidden");
+
+        // Update tab buttons
+        const tabButtons = document.querySelectorAll('[id^="response-tab-"]');
+        tabButtons.forEach((button) => {
+          button.classList.remove("bg-blue-600", "text-white");
+          button.classList.add(
+            "bg-gray-700",
+            "text-gray-300",
+            "hover:bg-gray-600"
+          );
+        });
+
+        // Activate selected tab
+        const activeTab = document.getElementById(`response-tab-${tabName}`);
+        activeTab.classList.remove(
+          "bg-gray-700",
+          "text-gray-300",
+          "hover:bg-gray-600"
+        );
+        activeTab.classList.add("bg-blue-600", "text-white");
       }
 
       // Load log detail on page load
