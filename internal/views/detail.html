@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JejakAPI - Log Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              dark: {
+                bg: "#0f172a",
+                surface: "#1e293b",
+                border: "#334155",
+                text: "#e2e8f0",
+              },
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-dark-bg text-dark-text min-h-screen">
+    <!-- Header dengan menu bar -->
+    <header class="bg-dark-surface border-b border-dark-border">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo/Title -->
+          <div class="flex items-center space-x-4">
+            <a
+              href="/jejakapi/"
+              class="text-xl font-bold text-white hover:text-blue-400 transition-colors"
+              >Jejak API</a
+            >
+            <span class="text-gray-400">/</span>
+            <span class="text-gray-300">Log Detail</span>
+          </div>
+
+          <!-- Back Button -->
+          <div class="flex items-center space-x-4">
+            <a
+              href="/jejakapi/"
+              class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+            >
+              ← Back to Logs
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div id="log-detail-container">
+        <div class="text-center py-16">
+          <div
+            class="animate-spin inline-block w-8 h-8 border-[3px] border-current border-t-transparent text-blue-600 rounded-full"
+            role="status"
+            aria-label="loading"
+          >
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-4 text-gray-400">Loading log detail...</p>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      function formatTimestamp(timestamp) {
+        return new Date(timestamp).toLocaleString();
+      }
+
+      function formatDuration(microseconds) {
+        if (microseconds < 1000) {
+          return microseconds + "μs";
+        } else if (microseconds < 1000000) {
+          return Math.round(microseconds / 1000) + "ms";
+        } else {
+          return Math.round(microseconds / 1000000) + "s";
+        }
+      }
+
+      function getStatusClass(status) {
+        if (status >= 200 && status < 300) return "bg-green-600";
+        if (status >= 400) return "bg-red-600";
+        if (status >= 300) return "bg-yellow-600";
+        return "bg-gray-600";
+      }
+
+      function getMethodClass(method) {
+        switch (method) {
+          case "GET":
+            return "bg-green-600";
+          case "POST":
+            return "bg-blue-600";
+          case "PUT":
+            return "bg-yellow-600";
+          case "DELETE":
+            return "bg-red-600";
+          case "PATCH":
+            return "bg-purple-600";
+          default:
+            return "bg-gray-600";
+        }
+      }
+
+      function formatJSON(str) {
+        try {
+          return JSON.stringify(JSON.parse(str), null, 2);
+        } catch (e) {
+          return str;
+        }
+      }
+
+      async function loadLogDetail() {
+        try {
+          // Get log ID from URL path
+          const pathParts = window.location.pathname.split("/");
+          const logId = pathParts[pathParts.length - 1];
+
+          const response = await fetch(`/jejakapi/api/logs/${logId}`);
+
+          if (!response.ok) {
+            throw new Error("Log not found");
+          }
+
+          const log = await response.json();
+
+          const statusClass = getStatusClass(log.status_code);
+          const methodClass = getMethodClass(log.method);
+
+          const html = `
+            <div class="space-y-6">
+              <!-- Overview Card -->
+              <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h1 class="text-2xl font-bold text-white">Request Details</h1>
+                  <div class="flex items-center space-x-3">
+                    <span class="${methodClass} text-white px-3 py-1 rounded text-sm font-bold">${
+            log.method
+          }</span>
+                    <span class="${statusClass} text-white px-3 py-1 rounded text-sm font-bold">${
+            log.status_code
+          }</span>
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span class="text-gray-400">URL:</span>
+                    <div class="text-white font-mono mt-1 break-all">${
+                      log.url
+                    }</div>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">Duration:</span>
+                    <div class="text-white mt-1">${formatDuration(
+                      log.duration
+                    )}</div>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">Timestamp:</span>
+                    <div class="text-white mt-1">${formatTimestamp(
+                      log.created_at
+                    )}</div>
+                  </div>
+                  <div>
+                    <span class="text-gray-400">Client IP:</span>
+                    <div class="text-white mt-1">${log.ip || "N/A"}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Request Section -->
+              <div class="bg-dark-surface border border-dark-border rounded-lg">
+                <div class="border-b border-dark-border p-4">
+                  <h2 class="text-lg font-semibold text-white">Request</h2>
+                  <!-- Tab Navigation -->
+                  <div class="flex space-x-1 mt-4">
+                    <button 
+                      onclick="switchRequestTab('body')" 
+                      id="tab-body" 
+                      class="px-3 py-2 text-sm font-medium rounded-lg transition-colors bg-blue-600 text-white"
+                    >
+                      Body
+                    </button>
+                    <button 
+                      onclick="switchRequestTab('headers')" 
+                      id="tab-headers" 
+                      class="px-3 py-2 text-sm font-medium rounded-lg transition-colors bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    >
+                      Headers
+                    </button>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <!-- Body Tab Content -->
+                  <div id="request-body-content" class="request-tab-content">
+                    ${
+                      log.body
+                        ? `
+                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-96 overflow-y-auto">${formatJSON(
+                      log.body
+                    )}</pre>
+                    `
+                        : '<div class="text-gray-400 text-sm">No request body</div>'
+                    }
+                  </div>
+                  <!-- Headers Tab Content -->
+                  <div id="request-headers-content" class="request-tab-content hidden">
+                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
+                      JSON.stringify(log.headers || {})
+                    )}</pre>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- Response Section -->
+              <div class="bg-dark-surface border border-dark-border rounded-lg">
+                <div class="border-b border-dark-border p-4">
+                  <h2 class="text-lg font-semibold text-white">Response</h2>
+                  <!-- Tab Navigation -->
+                  <div class="flex space-x-1 mt-4">
+                    <button 
+                      onclick="switchResponseTab('body')" 
+                      id="response-tab-body" 
+                      class="px-3 py-2 text-sm font-medium rounded-lg transition-colors bg-blue-600 text-white"
+                    >
+                      Body
+                    </button>
+                    <button 
+                      onclick="switchResponseTab('headers')" 
+                      id="response-tab-headers" 
+                      class="px-3 py-2 text-sm font-medium rounded-lg transition-colors bg-gray-700 text-gray-300 hover:bg-gray-600"
+                    >
+                      Headers
+                    </button>
+                  </div>
+                </div>
+                <div class="p-4">
+                  <!-- Body Tab Content -->
+                  <div id="response-body-content" class="response-tab-content">
+                    ${
+                      log.response_body
+                        ? `
+                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-96 overflow-y-auto">${formatJSON(
+                      log.response_body
+                    )}</pre>
+                    `
+                        : '<div class="text-gray-400 text-sm">No response body</div>'
+                    }
+                  </div>
+                  <!-- Headers Tab Content -->
+                  <div id="response-headers-content" class="response-tab-content hidden">
+                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
+                      JSON.stringify(log.response_headers || {})
+                    )}</pre>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- SQL Queries Section -->
+              ${
+                log.sql_queries &&
+                log.sql_queries.queries &&
+                log.sql_queries.queries.length > 0
+                  ? `
+              <div class="bg-dark-surface border border-dark-border rounded-lg">
+                <div class="border-b border-dark-border p-4">
+                  <h2 class="text-lg font-semibold text-white">Database Queries (${
+                    log.sql_queries.queries.length
+                  })</h2>
+                </div>
+                <div class="p-4 space-y-4">
+                  ${log.sql_queries.queries
+                    .map(
+                      (query, index) => `
+                    <div class="border border-dark-border rounded-lg overflow-hidden">
+                      <div class="bg-slate-800 px-3 py-2 border-b border-dark-border">
+                        <div class="flex items-center justify-between text-xs">
+                          <span class="text-gray-300 font-medium">Query #${
+                            index + 1
+                          }</span>
+                          <div class="flex items-center space-x-3">
+                            <span class="text-blue-400">Duration: ${
+                              query.duration
+                                ? (query.duration / 1000000).toFixed(2) + "ms"
+                                : "N/A"
+                            }</span>
+                            <span class="text-green-400">Rows: ${
+                              query.rows_affected || 0
+                            }</span>
+                            ${
+                              query.error
+                                ? '<span class="text-red-400">Error</span>'
+                                : '<span class="text-green-400">Success</span>'
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      <div class="p-3">
+                        <pre class="text-xs text-gray-300 whitespace-pre-wrap break-words">${
+                          query.sql
+                        }</pre>
+                        ${
+                          query.error
+                            ? `
+                        <div class="mt-2 pt-2 border-t border-red-600">
+                          <div class="text-xs text-red-400 font-medium mb-1">Error:</div>
+                          <pre class="text-xs text-red-300 whitespace-pre-wrap">${query.error}</pre>
+                        </div>
+                        `
+                            : ""
+                        }
+                      </div>
+                    </div>
+                  `
+                    )
+                    .join("")}
+                </div>
+              </div>
+              `
+                  : ""
+              }
+
+              <!-- Client Info Section -->
+              <div class="bg-dark-surface border border-dark-border rounded-lg">
+                <div class="border-b border-dark-border p-4">
+                  <h2 class="text-lg font-semibold text-white">Client Information</h2>
+                </div>
+                <div class="p-4">
+                  <div class="grid grid-cols-1 gap-4 text-sm">
+                    <div>
+                      <span class="text-gray-400">IP Address:</span>
+                      <div class="text-white mt-1">${log.ip || "N/A"}</div>
+                    </div>
+                    <div>
+                      <span class="text-gray-400">User Agent:</span>
+                      <div class="text-white mt-1 break-all">${
+                        log.user_agent || "N/A"
+                      }</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+
+          document.getElementById("log-detail-container").innerHTML = html;
+        } catch (error) {
+          console.error("Error loading log detail:", error);
+          document.getElementById("log-detail-container").innerHTML = `
+            <div class="text-center py-16">
+              <div class="text-red-400 text-lg">Error loading log detail</div>
+              <p class="text-gray-500 mt-2">${error.message}</p>
+              <a href="/jejakapi/" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                ← Back to Logs
+              </a>
+            </div>
+          `;
+        }
+      }
+
+      function switchRequestTab(tabName) {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll(".request-tab-content");
+        tabContents.forEach((content) => content.classList.add("hidden"));
+
+        // Show selected tab content
+        document
+          .getElementById(`request-${tabName}-content`)
+          .classList.remove("hidden");
+
+        // Update tab buttons
+        const tabButtons = document.querySelectorAll('[id^="tab-"]');
+        tabButtons.forEach((button) => {
+          button.classList.remove("bg-blue-600", "text-white");
+          button.classList.add(
+            "bg-gray-700",
+            "text-gray-300",
+            "hover:bg-gray-600"
+          );
+        });
+
+        // Activate selected tab
+        const activeTab = document.getElementById(`tab-${tabName}`);
+        activeTab.classList.remove(
+          "bg-gray-700",
+          "text-gray-300",
+          "hover:bg-gray-600"
+        );
+        activeTab.classList.add("bg-blue-600", "text-white");
+      }
+
+      function switchResponseTab(tabName) {
+        // Hide all response tab contents
+        const tabContents = document.querySelectorAll(".response-tab-content");
+        tabContents.forEach((content) => content.classList.add("hidden"));
+
+        // Show selected tab content
+        document
+          .getElementById(`response-${tabName}-content`)
+          .classList.remove("hidden");
+
+        // Update tab buttons
+        const tabButtons = document.querySelectorAll('[id^="response-tab-"]');
+        tabButtons.forEach((button) => {
+          button.classList.remove("bg-blue-600", "text-white");
+          button.classList.add(
+            "bg-gray-700",
+            "text-gray-300",
+            "hover:bg-gray-600"
+          );
+        });
+
+        // Activate selected tab
+        const activeTab = document.getElementById(`response-tab-${tabName}`);
+        activeTab.classList.remove(
+          "bg-gray-700",
+          "text-gray-300",
+          "hover:bg-gray-600"
+        );
+        activeTab.classList.add("bg-blue-600", "text-white");
+      }
+
+      // Load log detail on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        loadLogDetail();
+      });
+    </script>
+  </body>
+</html>

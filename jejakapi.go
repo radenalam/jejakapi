@@ -12,7 +12,7 @@ type JejakAPI struct {
 	webHandler *internal.WebHandler
 }
 
-// New membuat instance baru dari JejakAPI
+// New membuat instance baru dari JejakAPI dengan SQL query monitoring
 func New(db *gorm.DB) *JejakAPI {
 	// Auto migrate table
 	db.AutoMigrate(&internal.RequestLog{})

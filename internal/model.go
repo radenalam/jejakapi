@@ -17,6 +17,7 @@ type RequestLog struct {
 	StatusCode      int       `json:"status_code" gorm:"not null"`
 	ResponseHeaders JSON      `json:"response_headers" gorm:"type:jsonb"`
 	ResponseBody    *string   `json:"response_body,omitempty" gorm:"type:text"`
+	SQLQueries      JSON      `json:"sql_queries,omitempty" gorm:"type:jsonb"`
 	Duration        int64     `json:"duration" gorm:"not null"` // in microseconds
 	IP              string    `json:"ip" gorm:"size:45"`
 	UserAgent       string    `json:"user_agent" gorm:"size:500"`
