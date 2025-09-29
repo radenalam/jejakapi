@@ -69,8 +69,8 @@ func (c *Collector) Middleware() fiber.Handler {
 			return ctx.Next()
 		}
 
-		// Skip monitoring untuk routes JejakAPI sendiri
-		if strings.HasPrefix(ctx.Path(), "/jejakapi") {
+		// Skip monitoring untuk routes JejakAPI sendiri dan favicon
+		if strings.HasPrefix(ctx.Path(), "/jejakapi") || strings.HasPrefix(ctx.Path(), "/favicon.ico") {
 			return ctx.Next()
 		}
 
