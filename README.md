@@ -12,11 +12,16 @@ JejakAPI adalah tools monitoring request dan response seperti Laravel Telescope 
 - 🗑️ Clear logs functionality
 - 🔄 Auto-refresh logs
 
+
 ## Installation
 
-1. Copy folder `jejakapi` ke project Anda
-2. Install dependencies yang diperlukan
-3. Integrate dengan aplikasi Fiber Anda
+Install JejakAPI dengan perintah berikut:
+
+```bash
+go get github.com/radenalam/jejakapi
+```
+
+Lalu integrasikan dengan aplikasi Fiber Anda sesuai contoh di bawah.
 
 ## Usage
 
@@ -120,23 +125,6 @@ CREATE TABLE request_logs (
 );
 ```
 
-## Customization
-
-### Exclude Routes
-
-Untuk mengecualikan routes tertentu dari monitoring:
-
-```go
-app.Use("/health", healthHandler) // tidak akan dimonitor
-app.Use(jejakAPI.Middleware())    // middleware setelah routes yang dikecualikan
-```
-
-### Custom Configuration
-
-```go
-collector := jejakAPI.GetCollector()
-collector.SetEnabled(false) // disable monitoring
-```
 
 ## Performance Considerations
 
