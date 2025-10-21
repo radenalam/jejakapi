@@ -22,6 +22,144 @@
         },
       };
     </script>
+    <style>
+      .json-viewer-wrapper {
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .json-viewer-toolbar {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .json-toolbar-button {
+        background-color: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 4px 12px;
+        font-size: 10px;
+        color: #cbd5f5;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+      }
+
+      .json-toolbar-button:hover {
+        background-color: #2563eb;
+        border-color: #2563eb;
+        color: #ffffff;
+      }
+
+      .json-tree {
+        font-family: "Fira Code", "Menlo", monospace;
+        font-size: 12px;
+        color: #e2e8f0;
+        line-height: 1.4;
+        max-height: 384px;
+        overflow: auto;
+      }
+
+      .json-node {
+        margin: 4px 0;
+      }
+
+      .json-node > summary {
+        cursor: pointer;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        color: #38bdf8;
+        font-weight: 600;
+      }
+
+      .json-node > summary::-webkit-details-marker {
+        color: #38bdf8;
+      }
+
+      .json-children {
+        border-left: 1px solid #1e293b;
+        margin-left: 12px;
+        padding-left: 12px;
+        display: grid;
+        gap: 4px;
+      }
+
+      .json-key {
+        color: #93c5fd;
+      }
+
+      .json-key.root {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .json-sep {
+        color: #64748b;
+        margin: 0 4px;
+      }
+
+      .json-brace {
+        color: #38bdf8;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .json-meta {
+        color: #94a3b8;
+        font-size: 10px;
+      }
+
+      .json-value.string {
+        color: #4ade80;
+      }
+
+      .json-value.number {
+        color: #fbbf24;
+      }
+
+      .json-value.boolean {
+        color: #f97316;
+      }
+
+      .json-value.null {
+        color: #f472b6;
+      }
+
+      .json-value.undefined {
+        color: #f87171;
+      }
+
+      .json-pair {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+      }
+
+      .json-empty {
+        color: #64748b;
+        font-style: italic;
+      }
+
+      .json-raw {
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 12px;
+        font-family: "Fira Code", "Menlo", monospace;
+        font-size: 12px;
+        color: #e2e8f0;
+        max-height: 384px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+    </style>
   </head>
   <body class="bg-dark-bg text-dark-text min-h-screen">
     <!-- Header dengan menu bar -->
@@ -107,12 +245,179 @@
         }
       }
 
-      function formatJSON(str) {
-        try {
-          return JSON.stringify(JSON.parse(str), null, 2);
-        } catch (e) {
-          return str;
+      function escapeHtml(value) {
+        const stringValue = String(value);
+        return stringValue
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function normalizeJsonSource(raw) {
+        if (raw === null || raw === undefined) {
+          return { hasData: false };
         }
+
+        if (typeof raw === "string") {
+          const trimmed = raw.trim();
+          if (!trimmed) {
+            return { hasData: false };
+          }
+          try {
+            return { hasData: true, value: JSON.parse(trimmed) };
+          } catch (error) {
+            return { hasData: true, raw: trimmed };
+          }
+        }
+
+        return { hasData: true, value: raw };
+      }
+
+      function renderJsonViewer(elementId, rawData, options = {}) {
+        const anchor = document.getElementById(elementId);
+        if (!anchor) {
+          return;
+        }
+
+        const source = normalizeJsonSource(rawData);
+        if (!source.hasData) {
+          anchor.innerHTML = '<div class="text-gray-400 text-sm">No data available</div>';
+          return;
+        }
+
+        if (source.raw !== undefined) {
+          anchor.innerHTML = `<pre class="json-raw">${escapeHtml(source.raw)}</pre>`;
+          return;
+        }
+
+        const label = options.rootLabel || (Array.isArray(source.value) ? "Array" : "Object");
+
+        if (typeof source.value !== "object" || source.value === null) {
+          anchor.innerHTML = `
+            <div class="json-viewer-wrapper">
+              <div class="json-tree">
+                ${renderPrimitive(source.value, null, { isRoot: true, rootLabel: label })}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        const treeId = `${elementId}-tree`;
+        anchor.innerHTML = `
+          <div class="json-viewer-wrapper">
+            <div class="json-viewer-toolbar">
+              <button type="button" class="json-toolbar-button" data-action="expand" data-target="${treeId}">Expand All</button>
+              <button type="button" class="json-toolbar-button" data-action="collapse" data-target="${treeId}">Collapse All</button>
+            </div>
+            <div id="${treeId}" class="json-tree">
+              ${renderJsonNode(source.value, null, { isRoot: true, rootLabel: label })}
+            </div>
+          </div>
+        `;
+
+        anchor.querySelectorAll(".json-toolbar-button").forEach((button) => {
+          button.addEventListener("click", function () {
+            toggleJsonDetails(this.dataset.target, this.dataset.action === "expand");
+          });
+        });
+      }
+
+      function renderJsonNode(value, key, options = {}) {
+        if (value === null) {
+          return renderPrimitive(null, key, options);
+        }
+
+        if (Array.isArray(value)) {
+          const children = value
+            .map((item, index) => renderJsonNode(item, index))
+            .join("");
+          return wrapCollection(children, key, "array", value.length, options);
+        }
+
+        if (typeof value === "object") {
+          const entries = Object.entries(value);
+          const children = entries
+            .map(([childKey, childValue]) => renderJsonNode(childValue, childKey))
+            .join("");
+          return wrapCollection(children, key, "object", entries.length, options);
+        }
+
+        return renderPrimitive(value, key, options);
+      }
+
+      function wrapCollection(childrenHtml, key, type, size, options = {}) {
+        const isRoot = options.isRoot || false;
+        const rootLabel = options.rootLabel || null;
+
+        let labelMarkup = "";
+        if (isRoot) {
+          labelMarkup = `<span class="json-key root">${escapeHtml(String(rootLabel))}</span>`;
+        } else if (key !== null && key !== undefined) {
+          const keyLabel =
+            typeof key === "number" || /^[0-9]+$/.test(String(key))
+              ? `[${escapeHtml(String(key))}]`
+              : `"${escapeHtml(String(key))}"`;
+          labelMarkup = `<span class="json-key">${keyLabel}</span><span class="json-sep">:</span>`;
+        }
+
+        const bracketMarkup = `<span class="json-brace">${type === "array" ? "[ ]" : "{ }"}</span>`;
+        const metaMarkup = `<span class="json-meta">${size} item${size === 1 ? "" : "s"}</span>`;
+        const bodyMarkup = childrenHtml || `<span class="json-empty">Empty ${type}</span>`;
+
+        return `
+          <details class="json-node" open>
+            <summary>${labelMarkup}${bracketMarkup}${metaMarkup}</summary>
+            <div class="json-children">${bodyMarkup}</div>
+          </details>
+        `;
+      }
+
+      function renderPrimitive(value, key, options = {}) {
+        const isRoot = options.isRoot || false;
+        const rootLabel = options.rootLabel || null;
+
+        const type =
+          value === null
+            ? "null"
+            : typeof value === "number" && !Number.isFinite(value)
+            ? "string"
+            : typeof value === "undefined"
+            ? "undefined"
+            : typeof value;
+
+        const formattedValue =
+          value === null
+            ? "null"
+            : type === "string"
+            ? `"${escapeHtml(String(value))}"`
+            : escapeHtml(String(value));
+
+        let labelMarkup = "";
+        if (isRoot) {
+          labelMarkup = `<span class="json-key root">${escapeHtml(String(rootLabel || "Value"))}</span><span class="json-sep">:</span>`;
+        } else if (key !== null && key !== undefined) {
+          const keyLabel =
+            typeof key === "number" || /^[0-9]+$/.test(String(key))
+              ? `[${escapeHtml(String(key))}]`
+              : `"${escapeHtml(String(key))}"`;
+          labelMarkup = `<span class="json-key">${keyLabel}</span><span class="json-sep">:</span>`;
+        }
+
+        return `<div class="json-pair">${labelMarkup}<span class="json-value ${type}">${formattedValue}</span></div>`;
+      }
+
+      function toggleJsonDetails(targetId, expand) {
+        const root = document.getElementById(targetId);
+        if (!root) {
+          return;
+        }
+
+        root.querySelectorAll("details").forEach((details) => {
+          details.open = expand;
+        });
       }
 
       async function loadLogDetail() {
@@ -199,21 +504,11 @@
                 <div class="p-4">
                   <!-- Body Tab Content -->
                   <div id="request-body-content" class="request-tab-content">
-                    ${
-                      log.body
-                        ? `
-                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-96 overflow-y-auto">${formatJSON(
-                      log.body
-                    )}</pre>
-                    `
-                        : '<div class="text-gray-400 text-sm">No request body</div>'
-                    }
+                    <div id="request-body-json"></div>
                   </div>
                   <!-- Headers Tab Content -->
                   <div id="request-headers-content" class="request-tab-content hidden">
-                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
-                      JSON.stringify(log.headers || {})
-                    )}</pre>
+                    <div id="request-headers-json"></div>
                   </div>
                 </div>
               </div>
@@ -244,21 +539,11 @@
                 <div class="p-4">
                   <!-- Body Tab Content -->
                   <div id="response-body-content" class="response-tab-content">
-                    ${
-                      log.response_body
-                        ? `
-                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border max-h-96 overflow-y-auto">${formatJSON(
-                      log.response_body
-                    )}</pre>
-                    `
-                        : '<div class="text-gray-400 text-sm">No response body</div>'
-                    }
+                    <div id="response-body-json"></div>
                   </div>
                   <!-- Headers Tab Content -->
                   <div id="response-headers-content" class="response-tab-content hidden">
-                    <pre class="bg-dark-bg p-3 rounded text-xs text-gray-300 overflow-x-auto border border-dark-border">${formatJSON(
-                      JSON.stringify(log.response_headers || {})
-                    )}</pre>
+                    <div id="response-headers-json"></div>
                   </div>
                 </div>
               </div>
@@ -352,6 +637,11 @@
           `;
 
           document.getElementById("log-detail-container").innerHTML = html;
+
+          renderJsonViewer("request-body-json", log.body, { rootLabel: "Request Body" });
+          renderJsonViewer("request-headers-json", log.headers, { rootLabel: "Request Headers" });
+          renderJsonViewer("response-body-json", log.response_body, { rootLabel: "Response Body" });
+          renderJsonViewer("response-headers-json", log.response_headers, { rootLabel: "Response Headers" });
         } catch (error) {
           console.error("Error loading log detail:", error);
           document.getElementById("log-detail-container").innerHTML = `

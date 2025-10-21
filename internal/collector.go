@@ -15,8 +15,9 @@ import (
 
 // Collector bertanggung jawab untuk mengumpulkan dan menyimpan log request
 type Collector struct {
-	db      *gorm.DB
-	enabled bool
+	db           *gorm.DB
+	enabled      bool
+	excludePaths []string
 }
 
 // NewCollector membuat instance baru dari Collector dengan SQL query monitoring
@@ -24,6 +25,11 @@ func NewCollector(db *gorm.DB) *Collector {
 	collector := &Collector{
 		db:      db,
 		enabled: true,
+		excludePaths: []string{
+			"/jejakapi",
+			"/favicon.ico",
+			"/health",
+		},
 	}
 
 	// Setup SQL logger otomatis
@@ -69,8 +75,8 @@ func (c *Collector) Middleware() fiber.Handler {
 			return ctx.Next()
 		}
 
-		// Skip monitoring untuk routes JejakAPI sendiri dan favicon
-		if strings.HasPrefix(ctx.Path(), "/jejakapi") || strings.HasPrefix(ctx.Path(), "/favicon.ico") {
+		// Skip monitoring untuk exclude paths
+		if c.shouldExcludePath(ctx.Path()) {
 			return ctx.Next()
 		}
 
@@ -190,4 +196,39 @@ func (c *Collector) ClearLogs() error {
 // SetEnabled mengaktifkan/menonaktifkan collector
 func (c *Collector) SetEnabled(enabled bool) {
 	c.enabled = enabled
+}
+
+// shouldExcludePath memeriksa apakah path harus diexclude dari monitoring
+func (c *Collector) shouldExcludePath(path string) bool {
+	for _, excludePath := range c.excludePaths {
+		if strings.HasPrefix(path, excludePath) {
+			return true
+		}
+	}
+	return false
+}
+
+// AddExcludePath menambahkan path ke exclude list
+func (c *Collector) AddExcludePath(path string) {
+	c.excludePaths = append(c.excludePaths, path)
+}
+
+// RemoveExcludePath menghapus path dari exclude list
+func (c *Collector) RemoveExcludePath(path string) {
+	for i, excludePath := range c.excludePaths {
+		if excludePath == path {
+			c.excludePaths = append(c.excludePaths[:i], c.excludePaths[i+1:]...)
+			break
+		}
+	}
+}
+
+// SetExcludePaths mengatur semua exclude paths
+func (c *Collector) SetExcludePaths(paths []string) {
+	c.excludePaths = paths
+}
+
+// GetExcludePaths mengambil semua exclude paths
+func (c *Collector) GetExcludePaths() []string {
+	return c.excludePaths
 }
